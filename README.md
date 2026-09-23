@@ -15,62 +15,61 @@ build and validation scripts all live in this folder.
 ## Before and after
 
 `samples/WindowCovering.xml`, 584 lines — [source](samples/WindowCovering.xml) → [result](AdHoc/WindowCovering.cs).
-A command whose only argument is a `percent100ths` becomes a pack whose field is bit-packed into its hard range.
+It carries the densest data model of the twelve samples for this purpose: a bitmap becomes a `[Flags]` enum, and
+`percent100ths` attributes become `ushort?` fields bit-packed into their hard range. Conformance elements are
+elided below; everything else is verbatim.
 
 ```xml
-  <commands>
-    <command id="0x00" name="UpOrOpen" direction="commandToServer" response="Y">
-      <access invokePrivilege="operate"/>
-      <mandatoryConform/>
-    </command>
-    <!-- … DownOrClose, StopMotion, GoToLiftValue … -->
-    <command id="0x05" name="GoToLiftPercentage" direction="commandToServer" response="Y">
-      <access invokePrivilege="operate"/>
-      <otherwiseConform>
-        <mandatoryConform>
-          <andTerm>
-            <feature name="LF"/>
-            <feature name="PA_LF"/>
-          </andTerm>
-        </mandatoryConform>
-        <!-- … optionalConform on feature LF … -->
-      </otherwiseConform>
-      <field id="0" name="LiftPercent100thsValue" type="percent100ths">
-        <mandatoryConform/>
-        <constraint>
-          <desc/>
-        </constraint>
-      </field>
-    </command>
-  </commands>
+  <dataTypes>
+    <bitmap name="ModeBitmap">
+      <bitfield name="MotorDirectionReversed" bit="0" summary="Reverse the lift direction.">
+        <!-- … conformance elided … -->
+      </bitfield>
+      <!-- … CalibrationMode bit 1, MaintenanceMode bit 2, LedFeedback bit 3 … -->
+    </bitmap>
+  </dataTypes>
+  <attributes>
+    <attribute id="0x000B" name="TargetPositionLiftPercent100ths" type="percent100ths" default="null">
+      <access read="true" readPrivilege="view"/>
+      <quality nullable="true"/>
+      <!-- … conformance elided … -->
+    </attribute>
+    <attribute id="0x000E" name="CurrentPositionLiftPercent100ths" type="percent100ths" default="null">
+      <access read="true" readPrivilege="view"/>
+      <quality nullable="true" persistence="nonVolatile"/>
+      <!-- … conformance elided … -->
+      <constraint>
+        <max value="10000"/>
+      </constraint>
+    </attribute>
+  </attributes>
 ```
 
 ```csharp
         /**
-        Matter command (acknowledged with a status only) UpOrOpen (id 0x00)
+        Matter bitmap ModeBitmap (map8)
         */
-        class UpOrOpen {
-            public const uint command_id = 0x0;
-            public const string access = "invoke:operate";
-            public const string conformance = "M";
+        [Flags]
+        enum ModeBitmap {
+            /**
+            Reverse the lift direction.
+            */
+            MotorDirectionReversed = 1,
+            /**
+            Perform a calibration.
+            */
+            CalibrationMode = 2,
+            // … MaintenanceMode = 4, LedFeedback = 8 …
         }
-
-        // … DownOrClose, StopMotion, GoToLiftValue …
 
         /**
-        Matter command (acknowledged with a status only) GoToLiftPercentage (id 0x05)
+        All attributes of the cluster as one pack: the server reports them, the client writes the writable ones.
         */
-        class GoToLiftPercentage {
-            public const uint command_id = 0x5;
-            public const string access = "invoke:operate";
-            public const string conformance = "otherwise(M[(LF&PA_LF)]; O[LF])";
-            [MatterType("percent100ths"), MinMax(0, 10000), FieldId(0x0), Constraint("desc")] ushort LiftPercent100thsValue;
+        class Attributes {
+            // … CurrentPositionLift, CurrentPositionTilt, OperationalStatus …
+            [MatterType("percent100ths"), MinMax(0, 10000), AttrId(0xB), Access("read:view"), Quality("nullable"), Default("null"), Conformance("M[(LF&PA_LF)]")] ushort? TargetPositionLiftPercent100ths;
+            [MatterType("percent100ths"), MinMax(0, 10000), AttrId(0xE), Access("read:view"), Quality("nullable nonVolatile"), Default("null"), Constraint("max 10000"), Conformance("M[(LF&PA_LF)]")] ushort? CurrentPositionLiftPercent100ths;
         }
-
-        interface Interaction : Connects<Client, Server> {
-            // commands acknowledged with a status only: fire-and-forget from the client
-            [l____________<(UpOrOpen, DownOrClose, StopMotion, GoToLiftValue, GoToLiftPercentage, GoToTiltValue, GoToTiltPercentage)>]
-            struct Invoke { }
 ```
 
 ## Links
