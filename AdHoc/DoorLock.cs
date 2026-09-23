@@ -814,7 +814,7 @@ namespace org.matter {
         */
         class CredentialStruct {
             [FieldId(0x0)] CredentialTypeEnum CredentialType;
-            [FieldId(0x1)] ushort CredentialIndex;
+            [FieldId(0x1)] ushort CredentialIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         // octet string of up to 2 bytes, item type of list<octstr> fields
@@ -833,9 +833,9 @@ namespace org.matter {
             [AttrId(0x4), Access("read:view write:manage"), Conformance("O[DPS]")] uint? DoorOpenEvents;
             [AttrId(0x5), Access("read:view write:manage"), Conformance("O[DPS]")] uint? DoorClosedEvents;
             [AttrId(0x6), Access("read:view write:manage"), Conformance("O[DPS]")] ushort? OpenPeriod;
-            [AttrId(0x11), Access("read:view"), Quality("fixed"), Conformance("M[USR]")] ushort? NumberOfTotalUsersSupported;
-            [AttrId(0x12), Access("read:view"), Quality("fixed"), Conformance("M[PIN]")] ushort? NumberOfPINUsersSupported;
-            [AttrId(0x13), Access("read:view"), Quality("fixed"), Conformance("M[RID]")] ushort? NumberOfRFIDUsersSupported;
+            [AttrId(0x11), Access("read:view"), Quality("fixed"), Conformance("M[USR]")] ushort? NumberOfTotalUsersSupported; // physics: counter/index, floor at 0, unbounded above -> consider [A]
+            [AttrId(0x12), Access("read:view"), Quality("fixed"), Conformance("M[PIN]")] ushort? NumberOfPINUsersSupported; // physics: counter/index, floor at 0, unbounded above -> consider [A]
+            [AttrId(0x13), Access("read:view"), Quality("fixed"), Conformance("M[RID]")] ushort? NumberOfRFIDUsersSupported; // physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MinMax(0, 253), AttrId(0x14), Access("read:view"), Quality("fixed"), Constraint("max 0xFD"), Conformance("M[WDSCH]")] byte? NumberOfWeekDaySchedulesSupportedPerUser;
             [MinMax(0, 253), AttrId(0x15), Access("read:view"), Quality("fixed"), Constraint("max 0xFD"), Conformance("M[YDSCH]")] byte? NumberOfYearDaySchedulesSupportedPerUser;
             [MinMax(0, 253), AttrId(0x16), Access("read:view"), Quality("fixed"), Constraint("max 0xFD"), Conformance("M[HDSCH]")] byte? NumberOfHolidaySchedulesSupported;
@@ -869,8 +869,8 @@ namespace org.matter {
             [D(16), AttrId(0x84), Access("read:admin"), Quality("nullable"), Constraint("allowed 16"), Conformance("M[ALBU]")] Binary[,,] AliroGroupResolvingKey;
             [D(16), MatterType("list<octstr>"), AttrId(0x85), Access("read:admin"), Quality("fixed"), Constraint("maxCount 16"), Conformance("M[ALBU]")] octstr_max_2[,,] AliroSupportedBLEUWBProtocolVersions; // entry constraint: allowed 2
             [AttrId(0x86), Access("read:admin"), Quality("fixed"), Conformance("M[ALBU]")] byte? AliroBLEAdvertisingVersion;
-            [AttrId(0x87), Access("read:view"), Quality("fixed"), Conformance("M[ALIRO]")] ushort? NumberOfAliroCredentialIssuerKeysSupported;
-            [AttrId(0x88), Access("read:view"), Quality("fixed"), Conformance("M[ALIRO]")] ushort? NumberOfAliroEndpointKeysSupported;
+            [AttrId(0x87), Access("read:view"), Quality("fixed"), Conformance("M[ALIRO]")] ushort? NumberOfAliroCredentialIssuerKeysSupported; // physics: counter/index, floor at 0, unbounded above -> consider [A]
+            [AttrId(0x88), Access("read:view"), Quality("fixed"), Conformance("M[ALIRO]")] ushort? NumberOfAliroEndpointKeysSupported; // physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         // ═════════════════════════ commands ═════════════════════════
@@ -914,7 +914,7 @@ namespace org.matter {
             public const string access = "invoke:admin";
             public const string conformance = "M[WDSCH]";
             [FieldId(0x0), Constraint("between 1..attr:NumberOfWeekDaySchedulesSupportedPerUser")] byte WeekDayIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [FieldId(0x2)] DaysMaskBitmap DaysMask;
             [MinMax(0, 23), FieldId(0x3), Constraint("max 23")] byte StartHour;
             [MinMax(0, 59), FieldId(0x4), Constraint("max 59")] byte StartMinute;
@@ -930,7 +930,7 @@ namespace org.matter {
             public const string access = "invoke:admin";
             public const string conformance = "M[WDSCH]";
             [FieldId(0x0), Constraint("between 1..attr:NumberOfWeekDaySchedulesSupportedPerUser")] byte WeekDayIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -940,7 +940,7 @@ namespace org.matter {
             public const uint command_id = 0xC;
             public const string conformance = "M[WDSCH]";
             [FieldId(0x0), Constraint("between 1..attr:NumberOfWeekDaySchedulesSupportedPerUser")] byte WeekDayIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MatterType("enum8"), FieldId(0x2), Constraint("desc")] byte Status;
             [FieldId(0x3), Conformance("O")] DaysMaskBitmap? DaysMask;
             [MinMax(0, 23), FieldId(0x4), Constraint("max 23"), Conformance("O")] byte? StartHour;
@@ -957,7 +957,7 @@ namespace org.matter {
             public const string access = "invoke:admin";
             public const string conformance = "M[WDSCH]";
             [FieldId(0x0), Constraint("allowed 0xFE")] byte WeekDayIndex;
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -968,7 +968,7 @@ namespace org.matter {
             public const string access = "invoke:admin";
             public const string conformance = "M[YDSCH]";
             [FieldId(0x0), Constraint("between 1..attr:NumberOfYearDaySchedulesSupportedPerUser")] byte YearDayIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [FieldId(0x2)] DateTime LocalStartTime; // Matter epoch-s
             [FieldId(0x3)] DateTime LocalEndTime; // Matter epoch-s
         }
@@ -981,7 +981,7 @@ namespace org.matter {
             public const string access = "invoke:admin";
             public const string conformance = "M[YDSCH]";
             [FieldId(0x0), Constraint("between 1..attr:NumberOfYearDaySchedulesSupportedPerUser")] byte YearDayIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -991,7 +991,7 @@ namespace org.matter {
             public const uint command_id = 0xF;
             public const string conformance = "M[YDSCH]";
             [FieldId(0x0), Constraint("between 1..attr:NumberOfYearDaySchedulesSupportedPerUser")] byte YearDayIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MatterType("enum8"), FieldId(0x2), Constraint("desc")] byte Status;
             [FieldId(0x3), Conformance("O")] DateTime? LocalStartTime; // Matter epoch-s
             [FieldId(0x4), Conformance("O")] DateTime? LocalEndTime; // Matter epoch-s
@@ -1005,7 +1005,7 @@ namespace org.matter {
             public const string access = "invoke:admin";
             public const string conformance = "M[YDSCH]";
             [FieldId(0x0), Constraint("allowed 0xFE")] byte YearDayIndex;
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -1062,7 +1062,7 @@ namespace org.matter {
             public const string access = "invoke:admin timed";
             public const string conformance = "M[USR]";
             [FieldId(0x0), Constraint("allowed Modify")] DataOperationTypeEnum OperationType;
-            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [D(+10), FieldId(0x2), Quality("nullable"), Constraint("maxLength 10")] string UserName;
             [FieldId(0x3), Quality("nullable")] uint? UserUniqueID;
             [FieldId(0x4), Quality("nullable"), Constraint("allowed OccupiedDisabled")] UserStatusEnum? UserStatus;
@@ -1077,7 +1077,7 @@ namespace org.matter {
             public const uint command_id = 0x1B;
             public const string access = "invoke:admin";
             public const string conformance = "M[USR]";
-            [FieldId(0x0), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x0), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -1086,7 +1086,7 @@ namespace org.matter {
         class GetUserResponse {
             public const uint command_id = 0x1C;
             public const string conformance = "M[USR]";
-            [FieldId(0x0), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x0), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [D(+10), FieldId(0x1), Quality("nullable"), Constraint("maxLength 10")] string UserName;
             [FieldId(0x2), Quality("nullable")] uint? UserUniqueID;
             [FieldId(0x3), Quality("nullable")] UserStatusEnum? UserStatus;
@@ -1095,7 +1095,7 @@ namespace org.matter {
             [MatterType("list<CredentialStruct>"), FieldId(0x6), Quality("nullable"), Constraint("countBetween 0..attr:NumberOfCredentialsSupportedPerUser")] CredentialStruct[,,] Credentials; // item count is bounded by another attribute; falls back to _DefaultMaxLengthOf.Arrays
             [MatterType("fabric-idx"), FieldId(0x7), Quality("nullable")] byte? CreatorFabricIndex;
             [MatterType("fabric-idx"), FieldId(0x8), Quality("nullable")] byte? LastModifiedFabricIndex;
-            [FieldId(0x9), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? NextUserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x9), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? NextUserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -1105,7 +1105,7 @@ namespace org.matter {
             public const uint command_id = 0x1D;
             public const string access = "invoke:admin timed";
             public const string conformance = "M[USR]";
-            [FieldId(0x0), Constraint("allowed 0xFFFE")] ushort UserIndex;
+            [FieldId(0x0), Constraint("allowed 0xFFFE")] ushort UserIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -1118,7 +1118,7 @@ namespace org.matter {
             [FieldId(0x0), Constraint("allowed Modify")] DataOperationTypeEnum OperationType;
             [FieldId(0x1)] CredentialStruct Credential;
             [FieldId(0x2), Constraint("desc")] Binary[,,] CredentialData;
-            [FieldId(0x3), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x3), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [FieldId(0x4), Quality("nullable"), Constraint("allowed OccupiedDisabled")] UserStatusEnum? UserStatus;
             [FieldId(0x5), Quality("nullable"), Constraint("allowed RemoteOnlyUser")] UserTypeEnum? UserType;
         }
@@ -1130,8 +1130,8 @@ namespace org.matter {
             public const uint command_id = 0x23;
             public const string conformance = "M[USR]";
             [MatterType("status"), FieldId(0x0), Constraint("desc")] byte Status;
-            [FieldId(0x1), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? UserIndex; // bounds depend on another attribute, cannot be bit-packed
-            [FieldId(0x2), Quality("nullable"), Constraint("desc"), Conformance("O")] ushort? NextCredentialIndex;
+            [FieldId(0x1), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
+            [FieldId(0x2), Quality("nullable"), Constraint("desc"), Conformance("O")] ushort? NextCredentialIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         /**
@@ -1151,10 +1151,10 @@ namespace org.matter {
             public const uint command_id = 0x25;
             public const string conformance = "M[USR]";
             [FieldId(0x0)] bool CredentialExists;
-            [FieldId(0x1), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? UserIndex; // bounds depend on another attribute, cannot be bit-packed
+            [FieldId(0x1), Quality("nullable"), Constraint("between 1..attr:NumberOfTotalUsersSupported")] ushort? UserIndex; // bounds depend on another attribute, cannot be bit-packed; physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MatterType("fabric-idx"), FieldId(0x2), Quality("nullable")] byte? CreatorFabricIndex;
             [MatterType("fabric-idx"), FieldId(0x3), Quality("nullable")] byte? LastModifiedFabricIndex;
-            [FieldId(0x4), Quality("nullable"), Constraint("desc"), Conformance("O")] ushort? NextCredentialIndex;
+            [FieldId(0x4), Quality("nullable"), Constraint("desc"), Conformance("O")] ushort? NextCredentialIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
             [FieldId(0x5), Quality("nullable"), Constraint("desc"), Conformance("O[ALIRO]")] Binary[,,] CredentialData;
         }
 
@@ -1234,7 +1234,7 @@ namespace org.matter {
             public const string conformance = "M";
             [FieldId(0x0)] LockOperationTypeEnum LockOperationType;
             [FieldId(0x1)] OperationSourceEnum OperationSource;
-            [FieldId(0x2), Quality("nullable")] ushort? UserIndex;
+            [FieldId(0x2), Quality("nullable")] ushort? UserIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MatterType("fabric-idx"), FieldId(0x3), Quality("nullable")] byte? FabricIndex;
             [MatterType("node-id"), FieldId(0x4), Quality("nullable")] ulong? SourceNode;
             [MatterType("list<CredentialStruct>"), FieldId(0x5), Quality("nullable"), Constraint("countBetween 1..attr:NumberOfCredentialsSupportedPerUser"), Conformance("O[USR]")] CredentialStruct[,,] Credentials; // item count is bounded by another attribute; falls back to _DefaultMaxLengthOf.Arrays
@@ -1251,7 +1251,7 @@ namespace org.matter {
             [FieldId(0x0)] LockOperationTypeEnum LockOperationType;
             [FieldId(0x1)] OperationSourceEnum OperationSource;
             [FieldId(0x2)] OperationErrorEnum OperationError;
-            [FieldId(0x3), Quality("nullable")] ushort? UserIndex;
+            [FieldId(0x3), Quality("nullable")] ushort? UserIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MatterType("fabric-idx"), FieldId(0x4), Quality("nullable")] byte? FabricIndex;
             [MatterType("node-id"), FieldId(0x5), Quality("nullable")] ulong? SourceNode;
             [MatterType("list<CredentialStruct>"), FieldId(0x6), Quality("nullable"), Constraint("countBetween 1..attr:NumberOfCredentialsSupportedPerUser"), Conformance("O[USR]")] CredentialStruct[,,] Credentials; // item count is bounded by another attribute; falls back to _DefaultMaxLengthOf.Arrays
@@ -1268,10 +1268,10 @@ namespace org.matter {
             [FieldId(0x0)] LockDataTypeEnum LockDataType;
             [FieldId(0x1)] DataOperationTypeEnum DataOperationType;
             [FieldId(0x2), Constraint("allowed Remote")] OperationSourceEnum OperationSource;
-            [FieldId(0x3), Quality("nullable")] ushort? UserIndex;
+            [FieldId(0x3), Quality("nullable")] ushort? UserIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
             [MatterType("fabric-idx"), FieldId(0x4), Quality("nullable")] byte? FabricIndex;
             [MatterType("node-id"), FieldId(0x5), Quality("nullable")] ulong? SourceNode;
-            [FieldId(0x6), Quality("nullable")] ushort? DataIndex;
+            [FieldId(0x6), Quality("nullable")] ushort? DataIndex; // physics: counter/index, floor at 0, unbounded above -> consider [A]
         }
 
         // ═════════════════════════ topology ═════════════════════════

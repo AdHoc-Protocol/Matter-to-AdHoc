@@ -370,8 +370,8 @@ namespace org.matter {
             [AttrId(0x2), Access("read:view"), Quality("fixed"), Conformance("X")] ushort? PhysicalClosedLimitTilt;
             [AttrId(0x3), Access("read:view"), Quality("nullable nonVolatile"), Constraint("between attr:InstalledOpenLimitLift..attr:InstalledClosedLimitLift"), Conformance("X")] ushort? CurrentPositionLift; // bounds depend on another attribute, cannot be bit-packed
             [AttrId(0x4), Access("read:view"), Quality("nullable nonVolatile"), Constraint("between attr:InstalledOpenLimitTilt..attr:InstalledClosedLimitTilt"), Conformance("X")] ushort? CurrentPositionTilt; // bounds depend on another attribute, cannot be bit-packed
-            [AttrId(0x5), Access("read:view"), Quality("nonVolatile"), Default("0"), Conformance("O[LF]")] ushort? NumberOfActuationsLift;
-            [AttrId(0x6), Access("read:view"), Quality("nonVolatile"), Default("0"), Conformance("O[TL]")] ushort? NumberOfActuationsTilt;
+            [AttrId(0x5), Access("read:view"), Quality("nonVolatile"), Default("0"), Conformance("O[LF]")] ushort? NumberOfActuationsLift; // physics: counter/index, floor at 0, unbounded above -> consider [A]
+            [AttrId(0x6), Access("read:view"), Quality("nonVolatile"), Default("0"), Conformance("O[TL]")] ushort? NumberOfActuationsTilt; // physics: counter/index, floor at 0, unbounded above -> consider [A]
             [AttrId(0x7), Access("read:view"), Quality("nonVolatile"), Default("desc"), Constraint("desc")] ConfigStatusBitmap ConfigStatus;
             [MatterType("percent"), MinMax(0, 100), AttrId(0x8), Access("read:view"), Quality("nullable nonVolatile"), Default("null"), Conformance("O[(LF&PA_LF)]")] byte? CurrentPositionLiftPercentage;
             [MatterType("percent"), MinMax(0, 100), AttrId(0x9), Access("read:view"), Quality("nullable nonVolatile"), Default("null"), Conformance("O[(TL&PA_TL)]")] byte? CurrentPositionTiltPercentage;

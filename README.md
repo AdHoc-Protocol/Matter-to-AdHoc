@@ -12,6 +12,67 @@ attributes, commands (fire-and-forget or request/response), events, enums, bitma
 Self-contained: the converter, a local copy of the emitter helpers (`src/org/unirail/adhoc`), sample fetcher,
 build and validation scripts all live in this folder.
 
+## Before and after
+
+`samples/WindowCovering.xml`, 584 lines — [source](samples/WindowCovering.xml) → [result](AdHoc/WindowCovering.cs).
+A command whose only argument is a `percent100ths` becomes a pack whose field is bit-packed into its hard range.
+
+```xml
+  <commands>
+    <command id="0x00" name="UpOrOpen" direction="commandToServer" response="Y">
+      <access invokePrivilege="operate"/>
+      <mandatoryConform/>
+    </command>
+    <!-- … DownOrClose, StopMotion, GoToLiftValue … -->
+    <command id="0x05" name="GoToLiftPercentage" direction="commandToServer" response="Y">
+      <access invokePrivilege="operate"/>
+      <otherwiseConform>
+        <mandatoryConform>
+          <andTerm>
+            <feature name="LF"/>
+            <feature name="PA_LF"/>
+          </andTerm>
+        </mandatoryConform>
+        <!-- … optionalConform on feature LF … -->
+      </otherwiseConform>
+      <field id="0" name="LiftPercent100thsValue" type="percent100ths">
+        <mandatoryConform/>
+        <constraint>
+          <desc/>
+        </constraint>
+      </field>
+    </command>
+  </commands>
+```
+
+```csharp
+        /**
+        Matter command (acknowledged with a status only) UpOrOpen (id 0x00)
+        */
+        class UpOrOpen {
+            public const uint command_id = 0x0;
+            public const string access = "invoke:operate";
+            public const string conformance = "M";
+        }
+
+        // … DownOrClose, StopMotion, GoToLiftValue …
+
+        /**
+        Matter command (acknowledged with a status only) GoToLiftPercentage (id 0x05)
+        */
+        class GoToLiftPercentage {
+            public const uint command_id = 0x5;
+            public const string access = "invoke:operate";
+            public const string conformance = "otherwise(M[(LF&PA_LF)]; O[LF])";
+            [MatterType("percent100ths"), MinMax(0, 10000), FieldId(0x0), Constraint("desc")] ushort LiftPercent100thsValue;
+        }
+
+        interface Interaction : Connects<Client, Server> {
+            // commands acknowledged with a status only: fire-and-forget from the client
+            [l____________<(UpOrOpen, DownOrClose, StopMotion, GoToLiftValue, GoToLiftPercentage, GoToTiltValue, GoToTiltPercentage)>]
+            struct Invoke { }
+```
+
 ## Links
 
 | What | Where |
@@ -112,12 +173,37 @@ namespace org.matter {
 Pack ids in the Dashboard are left to AdHocAgent: Matter command/event ids are only unique inside a cluster and
 requests/responses may share them, so the Matter ids are kept as `const` members instead.
 
+## Varint: what a cluster XML does and does not say
+
+How Matter stores a value decides nothing here — AdHoc lays out its own frame, so a `uint16` on the Matter wire
+is not a reason to decline `[A]`, `[V]` or `[X]`. What decides those attributes is where a field's values
+actually sit, and a cluster XML states ranges and semantic types but never a distribution. So the converter emits
+no varint attribute on its own; it acts on the hints the data model *does* give.
+
+The arithmetic, once: varint wins while the typical distance from the base stays under roughly two million, and
+past 268 435 455 it always loses, costing a fifth byte on every packet forever.
+
+| What the cluster XML states | What the converter does |
+|:--|:--|
+| `percent` (0…100), `percent100ths` (0…10 000), a literal `between` / `min` / `max` constraint | a hard range, so it is bit-packed with `[MinMax]` — 115 fields; no varint question arises |
+| `epoch-us`, `posix-ms` — a microsecond or millisecond epoch | monotonic and systematically past 268 435 455, exactly where varint loses; emitted as `DateTime`, which encodes the instant directly. The field carries `// physics: monotonic and huge, varint would always lose here` |
+| `systime-ms`, `systime-us` — time since boot | same shape, emitted as a `Duration` alias with the same comment |
+| `elapsed-s` — a timeout or an elapsed span | clusters near zero, an `[A]` shape; emitted as a `Duration` alias, which already sizes it to the smallest container, and the field says so |
+| an attribute named `NumberOf*`, `*Count`, `*Index`, `*Sequence` | a counter or index: floor at 0, unbounded above. 30 fields carry `// physics: counter/index, floor at 0, unbounded above -> consider [A]` |
+| an attribute named `Remaining*` | a remaining budget hugs its ceiling: `// physics: … -> consider [V(max)]` |
+| a name containing `Delta`, `Offset`, `Deviation`, `Correction`, `Drift` | centred on zero: `// physics: a delta centred on zero -> consider [X(amplitude)]` |
+
+The hints are comments on the field, never attributes: picking a varint base is a decision about the data that
+the person refining the description makes, and the comment puts the question where that decision belongs. They
+are emitted only for integers wider than one byte that have no hard range — a `[MinMax]` field is already packed,
+and a `byte` has nothing for varint to drop.
+
 ## Dropped or approximated
 
 Everything the converter could not express is marked with an inline comment at the place it was dropped, so the
 file itself shows what needs a human decision (`// bounds depend on another attribute, cannot be bit-packed`,
 `// item count is bounded by another attribute; falls back to _DefaultMaxLengthOf.Arrays`,
-`// values: constants container X`, `// nested list not supported`).
+`// values: constants container X`, `// nested list not supported`, and the `// physics: …` hints above).
 
 - Conformance and constraint expressions are carried as text metadata, not enforced (feature-dependent
   mandatory/optional rules become `T?`).

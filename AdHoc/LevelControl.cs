@@ -116,7 +116,7 @@ namespace org.matter {
         */
         class Attributes {
             [AttrId(0x0), Access("read:view"), Quality("nullable nonVolatile scene quieterReporting"), Constraint("between attr:MinLevel..attr:MaxLevel")] byte? CurrentLevel; // bounds depend on another attribute, cannot be bit-packed
-            [AttrId(0x1), Access("read:view"), Quality("quieterReporting"), Conformance("M[LT]")] ushort? RemainingTime;
+            [AttrId(0x1), Access("read:view"), Quality("quieterReporting"), Conformance("M[LT]")] ushort? RemainingTime; // physics: a remaining budget hugs its ceiling -> consider [V(max)]
             [MinMax(0, 254), AttrId(0x2), Access("read:view"), Quality("fixed"), Default("1"), Constraint("max 254"), Conformance("otherwise(M[(revision>=revision)]; O)")] byte? MinLevel;
             [AttrId(0x3), Access("read:view"), Quality("fixed"), Default("254"), Constraint("between attr:MinLevel..254"), Conformance("otherwise(M[(revision>=revision)]; O)")] byte? MaxLevel; // bounds depend on another attribute, cannot be bit-packed
             [AttrId(0x4), Access("read:view"), Quality("scene quieterReporting"), Constraint("between attr:MinFrequency..attr:MaxFrequency"), Conformance("M[FQ]")] ushort? CurrentFrequency; // bounds depend on another attribute, cannot be bit-packed

@@ -975,6 +975,8 @@ public class Matter2AdHoc {
 				long[] mm = minMax(f, cs, srcType);
 				if (mm != null) attrs.add("MinMax(" + mm[0] + ", " + mm[1] + ")");
 				else if (f.symbolicBound) comments.add("bounds depend on another attribute, cannot be bit-packed");
+				String hint = physics(f.name, cs, mm != null);
+				if (hint != null) comments.add(hint);
 			}
 			if (valueType && (f.nullable || f.optional)) cs += "?";
 
@@ -1023,15 +1025,42 @@ public class Matter2AdHoc {
 			return new long[]{lo, hi};
 		}
 
+		/**
+		 * Where the values of a field actually sit, when the cluster XML says enough to tell. Matter never states a
+		 * distribution directly, but a conventional attribute name often implies one. The result is only ever a
+		 * comment naming a candidate: choosing varint is the developer's call and a converter cannot take it, but
+		 * it must not drop the question either.
+		 *
+		 * <p>Only for integers wider than one byte with no hard range; a `[MinMax]` field is already bit-packed.
+		 */
+		static String physics(String name, String cs, boolean hasHardRange) {
+			if (hasHardRange || !INTEGER.contains(cs) || cs.equals("byte") || cs.equals("sbyte")) return null;
+			String lower = name == null ? "" : name.toLowerCase();
+			if (lower.startsWith("remaining") || lower.endsWith("remaining"))
+				return "physics: a remaining budget hugs its ceiling -> consider [V(max)]";
+			if (lower.endsWith("count") || lower.endsWith("counter") || lower.startsWith("numberof")
+					|| lower.endsWith("index") || lower.endsWith("sequence"))
+				return "physics: counter/index, floor at 0, unbounded above -> consider [A]";
+			if (lower.contains("delta") || lower.contains("offset") || lower.contains("deviation")
+					|| lower.contains("correction") || lower.contains("drift"))
+				return "physics: a delta centred on zero -> consider [X(amplitude)]";
+			return null;
+		}
+
 		/** C# type for a non-collection Matter type; adds a [MatterType] attribute for anything that is not a plain base type. */
 		String fieldType(String t, List<String> attrs, List<String> comments) {
 			// Temporal types map to AdHoc's own time concepts, not to an integer plus a [MatterType] tag.
 			if (DATETIME.contains(t)) {
-				comments.add("Matter " + t);
+				// A microsecond / millisecond epoch is systematically past 268_435_455, where varint always loses;
+				// DateTime carries the instant directly instead of a large integer.
+				comments.add("Matter " + t + (t.endsWith("-us") || t.endsWith("-ms")
+						? "; physics: monotonic and huge, varint would always lose here" : ""));
 				return "DateTime";
 			}
 			if (DURATIONS.containsKey(t)) {
-				comments.add("Matter " + t);
+				comments.add("Matter " + t + ("elapsed-s".equals(t)
+						? "; physics: timeouts cluster near zero ([A] shape), Duration already sizes it to the smallest container"
+						: "; physics: monotonic and huge, varint would always lose here"));
 				return usedDurations.computeIfAbsent(t, k -> reserve(DURATIONS.get(k)[0]));
 			}
 			if (enums.containsKey(t) || bitmaps.containsKey(t)) {
